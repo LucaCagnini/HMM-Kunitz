@@ -12,10 +12,11 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
 - [Requirements](#requirements)
 - [Pipeline Execution](#pipeline-execution)
   - [1. Extract Kunitz Sequences](#1-extract-kunitz-domain-sequences-from-uniprot)
-  - [2. Build the HMM](#2-build-the-hmm)
-  - [3. Search with the Model](#3-search-with-the-model)
-  - [4. Format Results](#4-format-results-into-class-files)
-  - [5. Evaluate the Model](#5-evaluate-the-model)
+  - [2. Perform MSA](#2-perform-msa)
+  - [3. Build the HMM](#3-Build-the-hmm)
+  - [4. Search with the Model](#4-search-with-the-model)
+  - [5. Format Results](#5format-results-into-class-files)
+  - [6. Evaluate the Model](#6-evaluate-the-model)
 - [Output](#-output)
 - [Author](#-author)
 - [License](#-license)
@@ -101,7 +102,7 @@ for i in $(cat pdb_kunitz_rp.ids); do   grep -A 1 "^>$i" pdb_kunitz_customreport
 
 pdb_kunitz_rp.fasta contains only the represantative sequences selected from CD-HIT
 
-### Perform MSA
+### 2. Perform MSA
 
 We used the PDBeFold Multi alignment Tool
 [link text] (https://www.ebi.ac.uk/msd-srv/ssm/cgi-bin/ssmserver)
@@ -112,7 +113,7 @@ we download the PDEBefold alignment as .ali and then format that
 awk '{if (substr($1,1,1)==">") {print "\n" toupper($1)} else {printf "%s", toupper($1)}}'pdb_kunitz_rp.ali >pdb_kunitz_rp_formatted.ali
 ```
 
-### Bulid the HMM
+### 3. Bulid the HMM
 
 We activate our dedicated conda enviroment and build the HMM model using the output file from the previous MSA
 
@@ -122,7 +123,7 @@ hmmbuild structural_model.hmm pdb_kunitz_rp_formatted.ali
 
 ```
 
-### Search with the model 
+### 4. Search with the model 
 
 We run hmmsearch on all positive and negative FASTA files and create a tabular output. We generate .out files that contains the E-values computed on the HMM of the sequence alignment.
 
@@ -133,15 +134,13 @@ hmmsearch -Z 1000 --max --tblout neg_1_seqali.out pdb_kunitz_rp_formatted.hmm ne
 hmmsearch -Z 1000 --max --tblout neg_2_seqali.out pdb_kunitz_rp_formatted.hmm neg_2.fasta
 ```
 
+we create a database with the sequences we can download from PDB:
 
-### Blast search
- we create a database with the sequences we can download from PDB:
+-all_kunitz.fasta
 
-all_kunitz.fasta
+-human_kunitz.fasta
 
-human_kunitz.fasta
-
-human_not_kunitz.fasta
+-human_not_kunitz.fasta
 
 ```
 makeblastdb -in all_kunitz_uniprot.fasta -dbtype prot -out all_kunitz_uniprot.fasta
@@ -159,7 +158,7 @@ comm -23 <(sort all_kunitz.id) <(sort to_remove.ids) >to_keep.ids
 
 ```
 
-### Sequences
+### 5. Format results
 
 we need to obtain the sequences of the proteins we keep, to do so we use the script *get_seq.py*
 and we need to divide in negative and positive set. 
@@ -188,7 +187,52 @@ tail -n 286417 random_sp_negs.ids >neg_2.ids
 
 ```
 
-### evaluate the model
+### 6.Evaluate the model
+
+We use hmmsearch ad use as input our model and our positives/negatives sets. 
+
+```
+hmmsearch -Z 1000 --max --tblout pos_1.out structural_model.hmm pos_1.fasta
+hmmsearch -Z 1000 --max --tblout pos_2.out structural_model.hmm pos_2.fasta
+hmmsearch -Z 1000 --max --tblout neg_1.out structural_model.hmm neg_1.fasta
+hmmsearch -Z 1000 --max --tblout neg_2.out structural_model.hmm neg_2.fasta
+
+```
+We then convert the output in a classification format 
+
+
+```
+
+grep -v "^#" pos_1.out | awk '{split($1,a,"|"); print a[2]"\t1\t"$5"\t"$8}' > pos_1.class
+grep -v "^#" pos_2.out | awk '{split($1,a,"|"); print a[2]"\t1\t"$5"\t"$8}' > pos_2.class
+grep -v "^#" neg_1.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > neg_1.class
+grep -v "^#" neg_2.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > neg_2.class
+
+```
+we create two set from the previous files
+
+
+```
+cat pos_2.class neg_2_hits.class >set_2.class
+cat pos_2.class neg_2_hits.class > set_2.class
+```
+we use the file performance.py to value the performance
+
+```
+
+python3 performance.py set_2.class 1e-5 >results_set_1.txt
+python3 performance.py set_2.class 1e-5 >results_set_2.txt
+
+```
+
+we can run the command, using different thresholds for the E value, evalutaing the changes of our performances. 
+
+```
+
+for i in $(seq 1 10); do   python3 performance.py set_1.class 1e-$i; done | sort -nrk 6 > diff_threshold_set1.txt
+for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done | sort -nrk 6 > diff_threshold_set2.txt
+
+```
 
  
 
