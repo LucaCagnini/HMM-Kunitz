@@ -26,16 +26,16 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
 ## objectives
 
 - Build a structure-based multiple sequence alignment of known Kunitz-domain proteins.
+- Filter redundancy using BLAST and CD-HIT.
 - Create and calibrate an HMM model using that alignment.
 - Evaluate the model’s performance using curated positive (true Kunitz) and negative (non-Kunitz) datasets.
-- Filter redundancy using BLAST and CD-HIT.
-- Output metrics such as confusion matrix, accuracy, sensitivity, and specificity.
+- Output metrics such as confusion matrix, accuracy, sensitivity, and specificity. 
 
 ---
 
 ## Requirements
 
-all the requirements needs to be satisfied and can be installed in a dedicated conda enviroment.
+All the requirement packages needs to be installed before. This can be done in a dedicated conda enviroment.
 
 ```bash
 conda create -n kunitz_env python=3.10
@@ -50,7 +50,8 @@ conda install cd-hit
 ## Pipeline Execution
 
 ### 1. *Extract Kunitz domain sequences from UniProt:*
-From the advance search function in UniProt it is possible to download the sequences of all the proteins showing a Kunitz domain:
+
+From the advance search function in UniProt it is possible to download the sequences of all the proteins showing a Kunitz domain, with a specific query:
    
    ° Pfam ID: PF 00014
    
@@ -64,13 +65,15 @@ Query:
 Data Collection Resolution <= 3.5 AND ( Identifier = "PF00014" AND Annotation Type = "Pfam" ) AND Polymer Entity Sequence Length <= 80 AND Polymer Entity Sequence Length >= 45
 ```
 
-Then we can extract the IDs from the results file (rcsb_pdb_custom_report20250410062557.csv) :
+Then we can extract the IDs from the results file (rcsb_pdb_custom_report20250410062557.csv) and create a fasta file:
 
 ```
 cat rcsb_pdb_custom_report20250410062557.csv| tr -d '"' | awk -F ',' '{if (length($2)>0) {name=$2}; print name ,$3,$4,$5}' | grep PF00014 | awk '{print ">"$1"_"$3; print $2}' > pdb_kunitz_customreported.fasta
 ```
 
-Then, we cluster the sequences using CD-HIT, at 90% identity threshold: 
+Then, we cluster the sequences using CD-HIT, at 90% identity threshold.
+CD-HIT is a greedy incremental algorithm that starts with the longest input sequence as the first cluster representative and then processes the remaining sequences from long to short to classify each sequence as a redundant or representative sequence based on its similarities to the existing representatives (Fu et al., 2012).
+
 
 ```
 cd-hit -i pdb_kunitz_customreported.fasta -o pdb_kunitz_customreported.clstr -c 0.9
@@ -89,7 +92,6 @@ we then take the ids from that file and we store them in a FASTA file
 ```
 
 awk '$5 == 1 {print $1}' pdb_kunitz.clusters.txt > pdb_kunitz_rp.ids
- 1543  cat pdb_kunitz_rp.ids
 
 ```
 
@@ -107,7 +109,7 @@ pdb_kunitz_rp.fasta contains only the represantative sequences selected from CD-
 We used the PDBeFold Multi alignment Tool
 [link text] (https://www.ebi.ac.uk/msd-srv/ssm/cgi-bin/ssmserver)
 
-we download the PDEBefold alignment as .ali and then format that 
+we download the PDEBefold alignment as .ali file and then format it
 
 ```
 awk '{if (substr($1,1,1)==">") {print "\n" toupper($1)} else {printf "%s", toupper($1)}}'pdb_kunitz_rp.ali >pdb_kunitz_rp_formatted.ali
@@ -134,13 +136,15 @@ hmmsearch -Z 1000 --max --tblout neg_1_seqali.out pdb_kunitz_rp_formatted.hmm ne
 hmmsearch -Z 1000 --max --tblout neg_2_seqali.out pdb_kunitz_rp_formatted.hmm neg_2.fasta
 ```
 
-we create a database with the sequences we can download from PDB:
+we create a database with the sequences, downloading them from PDB:
 
 -all_kunitz.fasta
 
 -human_kunitz.fasta
 
 -human_not_kunitz.fasta
+
+It is necessary to remove redundant proteins from our tests set. 
 
 ```
 makeblastdb -in all_kunitz_uniprot.fasta -dbtype prot -out all_kunitz_uniprot.fasta
@@ -200,7 +204,6 @@ hmmsearch -Z 1000 --max --tblout neg_2.out structural_model.hmm neg_2.fasta
 ```
 We then convert the output in a classification format 
 
-
 ```
 
 grep -v "^#" pos_1.out | awk '{split($1,a,"|"); print a[2]"\t1\t"$5"\t"$8}' > pos_1.class
@@ -210,7 +213,6 @@ grep -v "^#" neg_2.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > 
 
 ```
 we create two set from the previous files
-
 
 ```
 cat pos_2.class neg_2_hits.class >set_2.class
