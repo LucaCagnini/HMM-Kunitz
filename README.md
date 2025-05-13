@@ -158,7 +158,7 @@ comm -23 <(sort all_kunitz.id) <(sort to_remove.ids) >to_keep.ids
 we use the script *get_seq.py* to filter our files and prepare positive and negative set. 
 
 ```
-python3 get_seq.py to_keep.ids all_kunitz_uniprot.fasta ok_kunitz.fast
+python3 get_seq.py to_keep.ids all_kunitz_uniprot.fasta ok_kunitz.fasta
 
 grep ">" uniprot_sprot.fasta | cut -d "|" -f 2 >sp.id
 
@@ -179,6 +179,14 @@ tail -n 184 random_ok_kunitz.ids > pos_2.ids
 head -n 286417 random_sp_negs.ids >neg_1.ids
 tail -n 286417 random_sp_negs.ids >neg_2.ids
 
+```
+Sequences were then retrived using the entire uniprot databese
+
+```
+python3 get_seq.py pos_1.ids uniprot_sprot.fasta pos_1.fasta
+python3 get_seq.py pos_2.ids uniprot_sprot.fasta pos_2.fasta
+python3 get_seq.py neg_1.ids uniprot_sprot.fasta neg_1.fasta
+python3 get_seq.py neg_2.ids uniprot_sprot.fasta neg_2.fasta
 ```
 
 ### 6.Evaluate the model
