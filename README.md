@@ -14,7 +14,7 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
   - [1. Extract Kunitz Sequences](#1-extract-kunitz-domain-sequences-from-uniprot)
   - [2. Perform MSA](#2-perform-msa)
   - [3. Build the HMM](#3-Build-the-hmm)
-  - [4. Search with the Model](#4-search-with-the-model)
+  - [4. Testing the model](#testing-the-model)
   - [5. Format Results](#5format-results-into-class-files)
   - [6. Evaluate the Model](#6-evaluate-the-model)
 - [Output](#-output)
@@ -125,33 +125,23 @@ hmmbuild structural_model.hmm pdb_kunitz_rp_formatted.ali
 
 ```
 
-### 4. Search with the model 
+### 4. Testing the model 
 
-We run hmmsearch on all positive and negative FASTA files and create a tabular output. We generate .out files that contains the E-values computed on the HMM of the sequence alignment.
-
+to test our model we use a 2-k fold cross validation, creating a positive set and negative set. 
+From our positive test is necessary to remove the ids of the proteins we use to create our model, eliminating any possible bias. 
+we start from downloading ids from uniprot:
+human_kunitz.fasta
+human_not_kunitz.fasta
+uniprot_sprot.fasta
+and then we run a BLAST search.  
 ```
-hmmsearch -Z 1000 --max --tblout pos_1_seqali.out pdb_kunitz_rp_formatted.hmm pos_1.fasta
-hmmsearch -Z 1000 --max --tblout pos_2_seqali.out pdb_kunitz_rp_formatted.hmm pos_2.fasta
-hmmsearch -Z 1000 --max --tblout neg_1_seqali.out pdb_kunitz_rp_formatted.hmm neg_1.fasta
-hmmsearch -Z 1000 --max --tblout neg_2_seqali.out pdb_kunitz_rp_formatted.hmm neg_2.fasta
-```
+cat human_kunitz.fasta human_not_kunitz.fasta > all_kunitz.fasta
 
-we create a database with the sequences, downloading them from PDB:
-
--all_kunitz.fasta
-
--human_kunitz.fasta
-
--human_not_kunitz.fasta
-
-It is necessary to remove redundant proteins from our tests set. 
-
-```
 makeblastdb -in all_kunitz_uniprot.fasta -dbtype prot -out all_kunitz_uniprot.fasta
 
 blastp -query pdb_kunitz_rp.fasta -db all_kunitz_uniprot.fasta -out pdb_kunitz_nr_23.blast -outfmt 7
 ```
-we remove all the proteins with high identity to the one with witch we have created our HMM model. 
+we retrive the ids of all the proteins with high identity to the one with witch we have created our HMM model. 
 
 ```
 grep -v "^#" pdb_kunitz_nr_23.blast | awk '{if ($3>=95 && $4>=50) print $2}' | sort -u | cut -d "|" -f 2 > to_remove.ids
@@ -162,13 +152,13 @@ comm -23 <(sort all_kunitz.id) <(sort to_remove.ids) >to_keep.ids
 
 ```
 
+
 ### 5. Format results
 
-we need to obtain the sequences of the proteins we keep, to do so we use the script *get_seq.py*
-and we need to divide in negative and positive set. 
+we use the script *get_seq.py* to filter our files and prepare positive and negative set. 
 
 ```
-python3 get_seq.py to_keep.ids all_kunitz.fasta ok_kunitz.fasta
+python3 get_seq.py to_keep.ids all_kunitz_uniprot.fasta ok_kunitz.fast
 
 grep ">" uniprot_sprot.fasta | cut -d "|" -f 2 >sp.id
 
@@ -177,7 +167,7 @@ comm -23 <(sort sp.id) <(sort all_kunitz.id) >sp_negs.ids
 python3 get_seq.py sp_negs.ids uniprot_sprot.fasta sp_negs.fasta
 
 ```
-we need to randomise the positive and negative set
+now, we need to randomise the positive and negative set
 
 ```
 sort -R sp_negs.ids > random_sp_negs.ids
