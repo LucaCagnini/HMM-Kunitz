@@ -214,7 +214,7 @@ we create two set from the previous files
 
 ```
 cat pos_2.class neg_2_hits.class >set_2.class
-cat pos_2.class neg_2_hits.class > set_2.class
+cat pos_1.class neg_1_hits.class > set_1.class
 ```
 we use the file performance.py to value the performance
 
