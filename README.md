@@ -1,4 +1,3 @@
-
 # Profile HMM Pipeline for Kunitz-Type Protease Inhibitor Domain (Pfam: PF00014)
 
 This repository implements a **computational pipeline** for building and evaluating a Profile Hidden Markov Model (HMM) designed to detect the **Kunitz-type protease inhibitor domain** (Pfam ID: PF00014) within protein sequences.
@@ -6,6 +5,7 @@ This repository implements a **computational pipeline** for building and evaluat
 The project was developed as part of the _Laboratory of Bioinformatics 1_ course (MSc in Bioinformatics, University of Bologna) and integrates **structural bioinformatics**, **sequence analysis**, and **statistical model evaluation**.
 
 ---
+
 ## Table of Contents
 
 - [Objectives](#objectives)
@@ -13,39 +13,37 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
 - [Pipeline Execution](#pipeline-execution)
   - [1. Extract Kunitz Sequences](#1-extract-kunitz-domain-sequences-from-uniprot)
   - [2. Perform MSA](#2-perform-msa)
-  - [3. Build the HMM](#3-Build-the-hmm)
-  - [4. Model testing](#model-testing)
-  - [5. Format Results](#5format-results)
-  - [6. Model Evaluation](#6model-evaluation)
-- [Output](#-output)
-- [Author](#-author)
-- [License](#-license)
+  - [3. Build the HMM](#3-build-the-hmm)
+  - [4. Model Testing](#4-model-testing)
+  - [5. Format Results](#5-format-results)
+  - [6. Model Evaluation](#6-model-evaluation)
+- [Output](#output)
+- [Author](#author)
+- [License](#license)
 
-  ---
+---
 
-## objectives
+## Objectives
 
 - Build a structure-based multiple sequence alignment of known Kunitz-domain proteins.
 - Filter redundancy using BLAST and CD-HIT.
 - Create and calibrate an HMM model using that alignment.
 - Evaluate the model’s performance using curated positive (true Kunitz) and negative (non-Kunitz) datasets.
-- apply output metrics such as confusion matrix, accuracy, sensitivity, and specificity. 
+- Apply output metrics such as confusion matrix, accuracy, sensitivity, and specificity. 
 
 ---
 
 ## Requirements
 
-All the requirement packages needs to be installed before. This can be done in a dedicated conda enviroment.
+Before running the pipeline, you need to install all required tools in a Conda environment:
 
 ```bash
 conda create -n kunitz_env python=3.10
 conda activate kunitz_env
-conda install -c bioconda
-conda install -c hmmer
-conda install -c blast
-conda install -c biopython
-conda install cd-hit
+conda install -c bioconda hmmer blast biopython
+conda install -c conda-forge cd-hit
 ```
+
 to create and visualise plot, the following python libraries have been used. 
 
 ```bash
