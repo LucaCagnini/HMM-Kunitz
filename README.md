@@ -215,8 +215,12 @@ grep -v "^#" neg_2.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > 
 Two different sets were created from the first four files. 
 
 ```
-cat pos_2.class neg_2_hits.class >set_2.class
-cat pos_1.class neg_1_hits.class > set_1.class
+comm -23 <(sort neg_1.ids) <(cut -f1 neg_1.class | sort) | awk '{print $1"\t0\t10.0\t10.0"}' >> neg_1.class
+comm -23 <(sort neg_1.ids) <(cut -f1 neg_2.class | sort) | awk '{print $1"\t0\t10.0\t10.0"}' >> neg_2.class
+
+
+cat pos_2.class neg_2.class >set_2.class
+cat pos_1.class neg_1.class > set_1.class
 ```
 The file performance.py was used to value the performance.
 
