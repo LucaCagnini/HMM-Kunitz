@@ -57,7 +57,7 @@ from graphviz import Digraph
 
 ## Pipeline Execution
 
-N.B. in this repositry have been uploaded all the output files of the following script, as well as the python programmes used. 
+N.B. in this repositry have been uploaded all the output files of the following script, as well as the python programmes used under the  files/ folder. 
 
 ### 1. *Extract Kunitz domain sequences from UniProt:*
 
@@ -236,7 +236,20 @@ for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done | sort
 
 ```
 
- 
+### 7. Output
 
+ All final evaluation metrics, confusion matrices, and plots are saved in the results/ folder.
+
+### 8. Author
+
+Cagnini Luca
+
+MSc Student in Bioinformatics,
+
+University of Bologna
+
+### License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 
