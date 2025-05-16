@@ -236,8 +236,9 @@ Performance.py was run using different thresholds for the E-value, analysing the
 
 ```
 
-for i in $(seq 1 10); do   python3 performance.py set_1.class 1e-$i; done | > diff_threshold_set1.txt
-for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done | > diff_threshold_set2.txt
+for i in $(seq 1 10); do   python3 performance.py set_1.class 1e-$i; done > diff_threshold_set1.txt
+for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done
+ > diff_threshold_set2.txt
 
 ```
 
