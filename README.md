@@ -35,7 +35,7 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
 
 ## Requirements
 
-Before running the pipeline, you need to install all required tools in a Conda environment:
+Before running the pipeline, all required programmes were installed in a Conda environment:
 
 ```bash
 conda create -n kunitz_env python=3.10
@@ -130,8 +130,8 @@ hmmbuild structural_model.hmm pdb_kunitz_rp_formatted.ali
 
 ### 4. *Model testing*
 
-to test our model we use a 2-k fold cross validation, creating two positive and negative set. 
-The positive set was created removing from a file containing all kunitz proteins ids (downloaded from Uniprot) of the proteins we use to create our model, eliminating any possible bias. 
+to test the model a 2-k fold cross validation was used, creating two positive and negative set. 
+The positive set was created removing from a file containing all kunitz proteins ids (downloaded from Uniprot) of the proteins we use to create the model, eliminating any possible bias. 
 From uniprot three files were downloaded:
 human_kunitz.fasta
 human_not_kunitz.fasta
@@ -157,7 +157,7 @@ comm -23 <(sort all_kunitz.id) <(sort to_remove.ids) >to_keep.ids
 
 ### 5. *Format results*
 
-we use the script *get_seq.py* to filter our files and prepare positive and negative set. 
+wThe script *get_seq.py* was used to filter the files and prepare positive and negative set. 
 
 ```
 python3 get_seq.py to_keep.ids all_kunitz_uniprot.fasta ok_kunitz.fasta
@@ -169,7 +169,7 @@ comm -23 <(sort sp.id) <(sort all_kunitz.id) >sp_negs.ids
 python3 get_seq.py sp_negs.ids uniprot_sprot.fasta sp_negs.fasta
 
 ```
-The positive and negative set were randomised
+The positive and negative set were randomised.
 
 ```
 sort -R sp_negs.ids > random_sp_negs.ids
@@ -182,7 +182,7 @@ head -n 286417 random_sp_negs.ids >neg_1.ids
 tail -n 286417 random_sp_negs.ids >neg_2.ids
 
 ```
-Sequences were then retrived using the entire uniprot databese
+Sequences were then retrived using the entire uniprot database.
 
 ```
 python3 get_seq.py pos_1.ids uniprot_sprot.fasta pos_1.fasta
@@ -193,7 +193,7 @@ python3 get_seq.py neg_2.ids uniprot_sprot.fasta neg_2.fasta
 
 ### 6. *Model Evaluation*
 
-Hmmsearch was used, the input was our model and our positives/negatives sets. 
+Hmmsearch was used, the input was the model and our positives/negatives sets. 
 
 ```
 hmmsearch -Z 1000 --max --tblout pos_1.out structural_model.hmm pos_1.fasta
@@ -202,7 +202,7 @@ hmmsearch -Z 1000 --max --tblout neg_1.out structural_model.hmm neg_1.fasta
 hmmsearch -Z 1000 --max --tblout neg_2.out structural_model.hmm neg_2.fasta
 
 ```
-The output ere formatted in a classification format.
+The output were formatted in a classification format.
 
 ```
 
@@ -227,7 +227,7 @@ python3 performance.py set_2.class 1e-5 >results_set_2.txt
 
 ```
 
-Performance.py was run using different thresholds for the E-value, analysing the changes of our performances. 
+Performance.py was run using different thresholds for the E-value, analysing the changes in the performance metrics. 
 
 ```
 
@@ -243,9 +243,7 @@ for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done | sort
 ### 8. Author
 
 Cagnini Luca
-
 MSc Student in Bioinformatics,
-
 University of Bologna
 
 ### License
