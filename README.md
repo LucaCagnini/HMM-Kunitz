@@ -215,7 +215,8 @@ grep -v "^#" neg_2.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > 
 Two different sets were created from the first four files. 
 
 ```
-comm -23 <(sort neg_1.ids) <(cut -f1 neg_1.class | sort) | awk '{print $1"\t0\t10.0\t10.0"}' >> neg_1.class
+comm -23 <(sort neg_1.ids) <(cut -f1 neg_1.class | sort) | awk '{print $1"\t0\t10.0\t10.0"}' >
+> neg_1.class
 comm -23 <(sort neg_1.ids) <(cut -f1 neg_2.class | sort) | awk '{print $1"\t0\t10.0\t10.0"}' >> neg_2.class
 
 
@@ -235,8 +236,8 @@ Performance.py was run using different thresholds for the E-value, analysing the
 
 ```
 
-for i in $(seq 1 10); do   python3 performance.py set_1.class 1e-$i; done | sort -nrk 6 > diff_threshold_set1.txt
-for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done | sort -nrk 6 > diff_threshold_set2.txt
+for i in $(seq 1 10); do   python3 performance.py set_1.class 1e-$i; done | > diff_threshold_set1.txt
+for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done | > diff_threshold_set2.txt
 
 ```
 
