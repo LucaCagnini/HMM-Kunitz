@@ -29,7 +29,7 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
 - Filter redundancy using BLAST and CD-HIT.
 - Create and calibrate an HMM model using that alignment.
 - Evaluate the model’s performance using curated positive (true Kunitz) and negative (non-Kunitz) datasets.
-- Output metrics such as confusion matrix, accuracy, sensitivity, and specificity. 
+- apply output metrics such as confusion matrix, accuracy, sensitivity, and specificity. 
 
 ---
 
@@ -46,8 +46,20 @@ conda install -c blast
 conda install -c biopython
 conda install cd-hit
 ```
+to create and visualise plot, the following python libraries have been used. 
+
+```bash
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import nunpy as np
+from graphviz import Digraph
+```
+
 
 ## Pipeline Execution
+
+N.B. in this repositry have been uploaded all the output files of the following script, as well as the python programmes used. 
 
 ### 1. *Extract Kunitz domain sequences from UniProt:*
 
@@ -65,13 +77,13 @@ Query:
 Data Collection Resolution <= 3.5 AND ( Identifier = "PF00014" AND Annotation Type = "Pfam" ) AND Polymer Entity Sequence Length <= 80 AND Polymer Entity Sequence Length >= 45
 ```
 
-Then we can extract the IDs from the results file (rcsb_pdb_custom_report20250410062557.csv) and create a fasta file:
+Then the IDs from the results file (rcsb_pdb_custom_report20250410062557.csv) are extracted and a fasta file is created:
 
 ```
 cat rcsb_pdb_custom_report20250410062557.csv| tr -d '"' | awk -F ',' '{if (length($2)>0) {name=$2}; print name ,$3,$4,$5}' | grep PF00014 | awk '{print ">"$1"_"$3; print $2}' > pdb_kunitz_customreported.fasta
 ```
 
-Then, we cluster the sequences using CD-HIT, at 90% identity threshold.
+The sequences are clustered using CD-HIT, at 90% identity threshold.
 CD-HIT is a greedy incremental algorithm that starts with the longest input sequence as the first cluster representative and then processes the remaining sequences from long to short to classify each sequence as a redundant or representative sequence based on its similarities to the existing representatives (Fu et al., 2012).
 
 
@@ -79,25 +91,19 @@ CD-HIT is a greedy incremental algorithm that starts with the longest input sequ
 cd-hit -i pdb_kunitz_customreported.fasta -o pdb_kunitz_customreported.clstr -c 0.9
 
 ```
-We then take the file an analyse wether we can need to cut clusters away, before proceeding with our Multiple Sequence Alignment. results file: pdb_kunitz_customreported_trimmed.fasta 
-We then extract the most representative ID from each cluster
+The files were analyse to check if some clusters needed to be cut away, before proceeding with  Multiple Sequence Alignment. results file: pdb_kunitz_customreported_trimmed.fasta. The most representative ID from each cluster were extracted. 
 
 ```
 
 clstr2txt.pl pdb_kunitz_customreported_filtered.clstr > pdb_kunitz.clusters.txt
 
 ```
-we then take the ids from that file and we store them in a FASTA file
+The ids from that file are taken and stored in a FASTA file, and prepare a file for the MSA
 
 ```
 
 awk '$5 == 1 {print $1}' pdb_kunitz.clusters.txt > pdb_kunitz_rp.ids
 
-```
-
-and prepare a file for the MSA
-
-```
 for i in $(cat pdb_kunitz_rp.ids); do   grep -A 1 "^>$i" pdb_kunitz_customreported.fasta | head -n 2 >> pdb_kunitz_rp.fasta; done
 
 ```
@@ -106,10 +112,9 @@ pdb_kunitz_rp.fasta contains only the represantative sequences selected from CD-
 
 ### 2. Perform MSA
 
-We used the PDBeFold Multi alignment Tool
-[link text] (https://www.ebi.ac.uk/msd-srv/ssm/cgi-bin/ssmserver)
+PDBeFold Multi alignment Tool (https://www.ebi.ac.uk/msd-srv/ssm/cgi-bin/ssmserver) was used. 
 
-we download the PDEBefold alignment as .ali file and then format it
+after the alignment the file was saved as .ali and then formatted
 
 ```
 awk '{if (substr($1,1,1)==">") {print "\n" toupper($1)} else {printf "%s", toupper($1)}}'pdb_kunitz_rp.ali >pdb_kunitz_rp_formatted.ali
@@ -117,7 +122,7 @@ awk '{if (substr($1,1,1)==">") {print "\n" toupper($1)} else {printf "%s", toupp
 
 ### 3. Bulid the HMM
 
-We activate our dedicated conda enviroment and build the HMM model using the output file from the previous MSA
+The dedicated conda enviroment was activated and the HMM model was constructed using the output file from our previous MSA. 
 
 ```
 conda activate 
@@ -127,13 +132,13 @@ hmmbuild structural_model.hmm pdb_kunitz_rp_formatted.ali
 
 ### 4. Testing the model 
 
-to test our model we use a 2-k fold cross validation, creating a positive set and negative set. 
-From our positive test is necessary to remove the ids of the proteins we use to create our model, eliminating any possible bias. 
-we start from downloading ids from uniprot:
+to test our model we use a 2-k fold cross validation, creating two positive and negative set. 
+The positive set was created removing from a file containing all kunitz proteins ids (downloaded from Uniprot) of the proteins we use to create our model, eliminating any possible bias. 
+From uniprot three files were downloaded:
 human_kunitz.fasta
 human_not_kunitz.fasta
 uniprot_sprot.fasta
-and then we run a BLAST search.  
+and then a BLAST search was run.  
 ```
 cat human_kunitz.fasta human_not_kunitz.fasta > all_kunitz.fasta
 
@@ -141,7 +146,7 @@ makeblastdb -in all_kunitz_uniprot.fasta -dbtype prot -out all_kunitz_uniprot.fa
 
 blastp -query pdb_kunitz_rp.fasta -db all_kunitz_uniprot.fasta -out pdb_kunitz_nr_23.blast -outfmt 7
 ```
-we retrive the ids of all the proteins with high identity to the one with witch we have created our HMM model. 
+The ids of all the proteins with high identity to the one with witch we have created our HMM model were retrived. 
 
 ```
 grep -v "^#" pdb_kunitz_nr_23.blast | awk '{if ($3>=95 && $4>=50) print $2}' | sort -u | cut -d "|" -f 2 > to_remove.ids
@@ -167,7 +172,7 @@ comm -23 <(sort sp.id) <(sort all_kunitz.id) >sp_negs.ids
 python3 get_seq.py sp_negs.ids uniprot_sprot.fasta sp_negs.fasta
 
 ```
-now, we need to randomise the positive and negative set
+The positive and negative set were randomised
 
 ```
 sort -R sp_negs.ids > random_sp_negs.ids
@@ -191,7 +196,7 @@ python3 get_seq.py neg_2.ids uniprot_sprot.fasta neg_2.fasta
 
 ### 6.Evaluate the model
 
-We use hmmsearch ad use as input our model and our positives/negatives sets. 
+Hmmsearch was used, the input was our model and our positives/negatives sets. 
 
 ```
 hmmsearch -Z 1000 --max --tblout pos_1.out structural_model.hmm pos_1.fasta
@@ -200,7 +205,7 @@ hmmsearch -Z 1000 --max --tblout neg_1.out structural_model.hmm neg_1.fasta
 hmmsearch -Z 1000 --max --tblout neg_2.out structural_model.hmm neg_2.fasta
 
 ```
-We then convert the output in a classification format 
+The output ere formatted in a classification format.
 
 ```
 
@@ -210,13 +215,13 @@ grep -v "^#" neg_1.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > ne
 grep -v "^#" neg_2.out | awk '{split($1,a,"|"); print a[2]"\t0\t"$5"\t"$8}' > neg_2.class
 
 ```
-we create two set from the previous files
+Two different sets were created from the first four files. 
 
 ```
 cat pos_2.class neg_2_hits.class >set_2.class
 cat pos_1.class neg_1_hits.class > set_1.class
 ```
-we use the file performance.py to value the performance
+The file performance.py was used to value the performance.
 
 ```
 
@@ -225,7 +230,7 @@ python3 performance.py set_2.class 1e-5 >results_set_2.txt
 
 ```
 
-we can run the command, using different thresholds for the E value, evalutaing the changes of our performances. 
+Performance.py was run using different thresholds for the E-value, analysing the changes of our performances. 
 
 ```
 
