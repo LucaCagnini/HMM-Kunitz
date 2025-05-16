@@ -14,9 +14,9 @@ The project was developed as part of the _Laboratory of Bioinformatics 1_ course
   - [1. Extract Kunitz Sequences](#1-extract-kunitz-domain-sequences-from-uniprot)
   - [2. Perform MSA](#2-perform-msa)
   - [3. Build the HMM](#3-Build-the-hmm)
-  - [4. Testing the model](#testing-the-model)
-  - [5. Format Results](#5format-results-into-class-files)
-  - [6. Evaluate the Model](#6-evaluate-the-model)
+  - [4. Model testing](#model-testing)
+  - [5. Format Results](#5format-results)
+  - [6. Model Evaluation](#6model-evaluation)
 - [Output](#-output)
 - [Author](#-author)
 - [License](#-license)
@@ -110,7 +110,7 @@ for i in $(cat pdb_kunitz_rp.ids); do   grep -A 1 "^>$i" pdb_kunitz_customreport
 
 pdb_kunitz_rp.fasta contains only the represantative sequences selected from CD-HIT
 
-### 2. Perform MSA
+### 2. *Perform MSA*
 
 PDBeFold Multi alignment Tool (https://www.ebi.ac.uk/msd-srv/ssm/cgi-bin/ssmserver) was used. 
 
@@ -120,7 +120,7 @@ after the alignment the file was saved as .ali and then formatted
 awk '{if (substr($1,1,1)==">") {print "\n" toupper($1)} else {printf "%s", toupper($1)}}'pdb_kunitz_rp.ali >pdb_kunitz_rp_formatted.ali
 ```
 
-### 3. Bulid the HMM
+### 3. *Bulid the HMM*
 
 The dedicated conda enviroment was activated and the HMM model was constructed using the output file from our previous MSA. 
 
@@ -130,7 +130,7 @@ hmmbuild structural_model.hmm pdb_kunitz_rp_formatted.ali
 
 ```
 
-### 4. Testing the model 
+### 4. *Model testing*
 
 to test our model we use a 2-k fold cross validation, creating two positive and negative set. 
 The positive set was created removing from a file containing all kunitz proteins ids (downloaded from Uniprot) of the proteins we use to create our model, eliminating any possible bias. 
@@ -157,8 +157,7 @@ comm -23 <(sort all_kunitz.id) <(sort to_remove.ids) >to_keep.ids
 
 ```
 
-
-### 5. Format results
+### 5. *Format results*
 
 we use the script *get_seq.py* to filter our files and prepare positive and negative set. 
 
@@ -194,7 +193,7 @@ python3 get_seq.py neg_1.ids uniprot_sprot.fasta neg_1.fasta
 python3 get_seq.py neg_2.ids uniprot_sprot.fasta neg_2.fasta
 ```
 
-### 6.Evaluate the model
+### 6. *Model Evaluation*
 
 Hmmsearch was used, the input was our model and our positives/negatives sets. 
 
