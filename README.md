@@ -242,17 +242,17 @@ for i in $(seq 1 10); do   python3 performance.py set_2.class 1e-$i; done
 
 ```
 
-### 7. Output
+### *Output*
 
  All final evaluation metrics, confusion matrices, and plots are saved in the results/ folder.
 
-### 8. Author
+### *Author*
 
 Cagnini Luca
 MSc Student in Bioinformatics,
 University of Bologna
 
-### License
+### *License*
 
 This project is licensed under the MIT License. See the LICENSE file for details.
 
